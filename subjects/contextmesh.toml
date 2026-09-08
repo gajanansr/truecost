@@ -5,7 +5,7 @@
 [subject]
 name = "contextmesh"
 display = "ContextMesh"
-repo = "https://github.com/gajananrathod/ContextMesh"
+repo = "https://github.com/gajanansr/ContextMesh"
 mechanism = "injection"
 notes = """
 Injects recalled session memory and an AST repo map through local hooks.
@@ -16,7 +16,7 @@ was measured three times under different orderings and cost more every time:
 
 [claim]
 headline = "90% fewer tokens"
-source = "https://github.com/gajananrathod/ContextMesh (README, pre-0.10.0, withdrawn)"
+source = "https://github.com/gajanansr/ContextMesh (README, pre-0.10.0, withdrawn)"
 accounting = "token-count"
 value_pct = -90.0
 quoted = """

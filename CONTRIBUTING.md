@@ -102,7 +102,7 @@ audit.
 ## Development
 
 ```bash
-git clone https://github.com/gajananrathod/truecost
+git clone https://github.com/gajanansr/truecost
 cd truecost
 python3.11 -m venv .venv && .venv/bin/pip install -e ".[dev]"
 

@@ -30,9 +30,9 @@ dependencies = []
 dev = ["pytest>=8.3.0", "ruff>=0.7.0", "mypy>=1.13.0"]
 
 [project.urls]
-Homepage = "https://github.com/gajananrathod/truecost"
-Issues = "https://github.com/gajananrathod/truecost/issues"
-Methodology = "https://github.com/gajananrathod/truecost/blob/main/docs/METHODOLOGY.md"
+Homepage = "https://github.com/gajanansr/truecost"
+Issues = "https://github.com/gajanansr/truecost/issues"
+Methodology = "https://github.com/gajanansr/truecost/blob/main/docs/METHODOLOGY.md"
 
 [project.scripts]
 truecost = "truecost.cli:main"

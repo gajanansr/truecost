@@ -32,7 +32,7 @@ from pathlib import Path
 from truecost.core.runner import Task
 from truecost.corpus import Corpus, register
 
-SOURCE = "https://github.com/gajananrathod/ContextMesh#session-memory--works-conditionally"
+SOURCE = "https://github.com/gajanansr/ContextMesh#session-memory--works-conditionally"
 
 FIXTURE_FILES: dict[str, str] = {
     "settings.py": "TIMEOUT_SECONDS = 30\nMAX_CONNECTIONS = 10\n",

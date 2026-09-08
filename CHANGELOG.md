@@ -32,4 +32,4 @@ published.
   of Headroom. Its `--no-optimize` control still compacts tool schemas
   (`anthropic.py:2782`), so both arms compressed. Reported upstream.
 
-[Unreleased]: https://github.com/gajananrathod/truecost/compare/main...HEAD
+[Unreleased]: https://github.com/gajanansr/truecost/compare/main...HEAD

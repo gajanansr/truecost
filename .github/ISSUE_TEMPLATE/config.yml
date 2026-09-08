@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security vulnerability
-    url: https://github.com/gajananrathod/truecost/security/advisories/new
+    url: https://github.com/gajanansr/truecost/security/advisories/new
     about: Report privately. Manifests and corpora carry shell that runs on a reviewer's machine.
   - name: Methodology question
-    url: https://github.com/gajananrathod/truecost/blob/main/docs/METHODOLOGY.md
+    url: https://github.com/gajanansr/truecost/blob/main/docs/METHODOLOGY.md
     about: How measurements are made, and why each rule exists.
