@@ -82,10 +82,20 @@ def test_subjects_command_runs(capsys):
     assert "VOID" in out  # Headroom's void reason is printed, not hidden
 
 
-def test_dry_run_audit_spends_nothing_and_reports_missing_corpus():
-    """A missing corpus must stop before anything is executed."""
+def test_dry_run_prints_the_plan_even_when_the_corpus_is_missing(capsys):
+    """A dry run exists to be inspected; an unavailable corpus is part of that."""
+    code = cli.main(["--subjects-dir", str(SUBJECTS), "audit", "rtk", "--dry-run"])
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "no claim corpus registered" in out
+    assert "nothing executed" in out
+    assert "rtk vs off" in out  # the pairing is visible before any spend
+
+
+def test_real_run_refuses_when_the_corpus_is_missing():
+    """Without --dry-run, a missing corpus must stop before anything executes."""
     with pytest.raises(SystemExit, match="no claim corpus registered"):
-        cli.main(["--subjects-dir", str(SUBJECTS), "audit", "rtk", "--dry-run"])
+        cli.main(["--subjects-dir", str(SUBJECTS), "audit", "rtk"])
 
 
 def test_unknown_subject_exits_with_known_list():

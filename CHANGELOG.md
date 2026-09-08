@@ -24,6 +24,25 @@ published.
 - Verdict layer distinguishing `VERIFIED`, `UNVERIFIED`, and `INVALID`, with
   `no effect` as a first-class outcome.
 - Subject manifests for ContextMesh, RTK, Portal's read-shunt, and Headroom.
+- `truecost audit` wired end to end: builds the corpus, registers the subject's
+  arms, runs the preflight probe, executes the matrix, checks delivery per run,
+  and writes raw data to `results/<subject>__<axis>__<date>.json`. The runner is
+  injectable, so the pipeline that produces published numbers is itself tested
+  without spending anything.
+- Delivery is persisted per run. Transcripts do not survive the machine that
+  produced them, so without this every republished row would silently downgrade
+  to `UNVERIFIED`.
+- `truecost report` renders rows from saved audits. Inherited pre-CLI results
+  are republished as raw data and explicitly not re-rendered as verdicts.
+
+### Fixed
+- `pipx install truecost && truecost subjects` looked for `site-packages/subjects`
+  and failed. The audit's data lives in the repository, not the wheel, so the
+  data root is now discovered from the working directory. Found by installing
+  the built wheel and running it outside a checkout.
+- `release.yml` ran only on `v*` tags, so the first execution of any change to it
+  was the run that published to PyPI. Build, `twine check`, and the artifact
+  round-trip now run on every push and pull request; only `publish` is tagged.
 
 ### Notes on inherited results
 - Results carried over from ContextMesh's `bench/` are published unchanged in

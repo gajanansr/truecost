@@ -19,8 +19,7 @@ import json
 import sys
 from pathlib import Path
 
-from truecost import __version__, corpus, manifest
-from truecost.core.runner import register_arms, register_inert_env
+from truecost import __version__, audit, corpus, manifest, verdict
 
 # The audit's data — subjects and published results — lives in the repository,
 # not in the installed package. `pipx install truecost` gives you the CLI; the
@@ -94,31 +93,58 @@ def cmd_audit(args: argparse.Namespace) -> int:
 
     corpus.load_builtin()
     ok, why = corpus.available(subject.name, args.axis)
-    if not ok:
-        sys.exit(f"cannot run: {why}")
-
-    register_arms(subject.arms)
-    register_inert_env(subject.inert_env)
-
-    runnable, skipped = subject.arms, []
-    for note in skipped:
-        print(f"skipped: {note}")
 
     print(f"auditing {subject.display} on the {args.axis} corpus")
-    print(f"  claim:   {subject.claim.display} ({subject.claim.headline})")
-    print(f"  arms:    {', '.join(sorted(runnable))}")
-    print("  pairing: " + "; ".join(f"{p.treatment} vs {p.control}" for p in subject.pairings))
+    print(f"  claim:      {subject.claim.display} ({subject.claim.headline})")
+    print(f"  measures:   {manifest.ACCOUNTING[subject.claim.accounting]}")
+    print(f"  arms:       {', '.join(sorted(subject.arms))}")
+    for pairing in subject.pairings:
+        print(f"  pairing:    {pairing.treatment} vs {pairing.control} — {pairing.label}")
+        if pairing.rationale:
+            print(f"              {pairing.rationale}")
     print(f"  replicates: {args.replicates}")
+    print(f"  corpus:     {'ready' if ok else why}")
+    if subject.void_reason:
+        print(f"  VOID:       {subject.void_reason}")
 
+    # The plan prints either way: a dry run exists to be inspected, and an
+    # unavailable corpus is part of what you want to see.
     if args.dry_run:
         print("\n--dry-run: nothing executed. Remove it to spend real tokens.")
         return 0
+    if not ok:
+        sys.exit(f"cannot run: {why}")
 
-    print(
-        "\nNot yet wired to run_matrix: Phase 1 ships the rig and the ContextMesh\n"
-        "self-audit. See docs/ROADMAP.md. Use --dry-run to inspect the plan."
-    )
-    return 1
+    data_root = args.subjects_dir.parent
+    workdir = args.workdir or (data_root / ".audit-work" / f"{subject.name}-{args.axis}")
+    workdir.mkdir(parents=True, exist_ok=True)
+    print(f"\nworkdir: {workdir}\nthis spends real tokens; every replicate is a billed session\n")
+
+    def progress(result) -> None:
+        state = "ok" if result.verified else ("ERROR" if result.cli_error else "unverified")
+        print(
+            f"  {result.task_id:<12} {result.arm:<20} r{result.replicate}  "
+            f"{result.turns:>3} turns  ${result.cost_usd:.4f}  {state}"
+        )
+
+    try:
+        outcome = audit.run(
+            subject,
+            args.axis,
+            workdir=workdir,
+            results_dir=args.results_dir,
+            replicates=args.replicates,
+            model=args.model,
+            on_result=progress,
+        )
+    except audit.AuditError as exc:
+        sys.exit(f"cannot run: {exc}")
+
+    for note in outcome.skipped:
+        print(f"skipped: {note}")
+    print("\n" + verdict.render(outcome.rows))
+    print(f"\nraw data: {outcome.results_path}")
+    return 0
 
 
 def _load_results(directory: Path) -> list[tuple[Path, dict]]:
@@ -139,13 +165,24 @@ def cmd_report(args: argparse.Namespace) -> int:
     if args.json:
         print(json.dumps({p.name: r for p, r in results}, indent=2))
         return 0
-    print(f"truecost {__version__} — {len(results)} result file(s) in {args.results_dir.name}/\n")
+
+    subjects = _load_subjects(args.subjects_dir)
+    rows, legacy = [], []
     for path, _ in results:
-        print(f"  {path.name}")
-    print(
-        "\nRendering rows requires Phase 1 completion (see docs/ROADMAP.md);\n"
-        "raw data is published here regardless, which is the part that matters."
-    )
+        found = audit.load_rows(path, subjects)
+        (rows.extend(found) if found else legacy.append(path.name))
+
+    print(verdict.render(rows) if rows else "No rows rendered yet.")
+    if legacy:
+        # Raw data from before this CLI existed. Republished as data, not
+        # re-rendered as verdicts -- a number is only as good as the run that
+        # produced it, and these predate delivery being recorded per row.
+        print(
+            f"\n{len(legacy)} inherited result file(s) not rendered as rows "
+            "(pre-CLI raw data; see docs/ROADMAP.md):"
+        )
+        for name in legacy:
+            print(f"  {name}")
     return 0
 
 
@@ -228,12 +265,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("subjects", help="list tools under audit").set_defaults(func=cmd_subjects)
 
-    audit = sub.add_parser("audit", help="measure one subject")
-    audit.add_argument("subject")
-    audit.add_argument("--axis", choices=("claim", "neutral"), default="claim")
-    audit.add_argument("--replicates", type=int, default=3)
-    audit.add_argument("--dry-run", action="store_true", help="print the plan, spend nothing")
-    audit.set_defaults(func=cmd_audit)
+    audit_p = sub.add_parser("audit", help="measure one subject")
+    audit_p.add_argument("subject")
+    audit_p.add_argument("--axis", choices=("claim", "neutral"), default="claim")
+    audit_p.add_argument("--replicates", type=int, default=3)
+    audit_p.add_argument("--model", default=None, help="override the model under test")
+    audit_p.add_argument("--workdir", type=Path, default=None, help="where fixtures are built")
+    audit_p.add_argument("--dry-run", action="store_true", help="print the plan, spend nothing")
+    audit_p.set_defaults(func=cmd_audit)
 
     rep = sub.add_parser("report", help="render the leaderboard")
     rep.add_argument("--json", action="store_true")

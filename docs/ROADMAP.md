@@ -14,9 +14,11 @@ would be exactly the failure this project exists to criticise.
 - [x] Verdict layer: `VERIFIED` / `UNVERIFIED` / `INVALID`, `no effect`
 - [x] `truecost verify` integrity gate, enforced in CI
 - [x] ContextMesh `claim/` corpus, ported unchanged
-- [ ] `truecost audit` wired to `run_matrix` end to end
-- [ ] `truecost report` rendering rows from `results/`
+- [x] `truecost audit` wired to `run_matrix` end to end, with the runner
+      injectable so the pipeline is tested without spending anything
+- [x] `truecost report` rendering rows from `results/`
 - [ ] The ContextMesh self-audit re-run under the new CLI and published
+      — the only remaining item, and the one that costs real money
 
 The deliverable is a working auditor and one honest verdict against its own
 author's tool.
