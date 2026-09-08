@@ -1,11 +1,23 @@
 name: Release
 
+# The build and artifact round-trip run on every push and pull request; only
+# `publish` is gated on a tag. Previously this whole workflow ran on tags alone,
+# so the first execution of any change to it was the run that published to PyPI
+# — a version published in error can be yanked, never replaced. Now the parts
+# that can be tested without publishing are tested on every change.
 on:
   push:
+    branches: [main]
     tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -15,15 +27,48 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install build
+      - run: pip install build twine
       - run: python -m build
+      - name: metadata renders on PyPI
+        # A README that fails to render is only discoverable after publishing.
+        run: twine check dist/*
       - uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
 
-  publish:
+  verify-artifact:
+    # Exercises the upload/download round-trip and proves the built wheel works
+    # when installed, rather than only when run from a checkout. This is the job
+    # that would have caught the CLI resolving its data directory to
+    # site-packages/subjects, which never exists.
     needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: install the wheel, not the source tree
+        run: pip install dist/*.whl
+      - name: the installed CLI runs
+        run: truecost --version
+      - name: the installed CLI finds the repository's data
+        run: truecost verify
+      - name: and fails helpfully outside a checkout
+        run: |
+          cd "$(mktemp -d)"
+          if truecost subjects 2>&1 | tee /tmp/out; then :; fi
+          grep -q "run it from a clone" /tmp/out \
+            || { echo "::error::missing guidance outside a checkout"; exit 1; }
+
+  publish:
+    needs: [build, verify-artifact]
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     environment: pypi
     permissions:

@@ -9,11 +9,17 @@ plainly when a claim does not survive.
 It starts by auditing the tool its own author wrote.
 
 ```bash
-pipx install truecost
+git clone https://github.com/gajanansr/truecost && cd truecost
+pipx install truecost      # or, for development: pip install -e ".[dev]"
+
 truecost subjects          # what is under audit, and what each claims
 truecost audit contextmesh # measure it
 truecost report            # the leaderboard
 ```
+
+The audit's data — the subject manifests and every published result — lives in
+this repository, not in the wheel. The CLI discovers it by walking up from your
+working directory, so run it from a clone (or pass `--subjects-dir`).
 
 ---
 

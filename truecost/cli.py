@@ -22,9 +22,38 @@ from pathlib import Path
 from truecost import __version__, corpus, manifest
 from truecost.core.runner import register_arms, register_inert_env
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-SUBJECTS_DIR = REPO_ROOT / "subjects"
-RESULTS_DIR = REPO_ROOT / "results"
+# The audit's data — subjects and published results — lives in the repository,
+# not in the installed package. `pipx install truecost` gives you the CLI; the
+# rows it audits come from a clone. So the data root is discovered from the
+# working directory rather than from the package's own location, which resolves
+# to site-packages once installed and finds nothing.
+PACKAGE_ROOT = Path(__file__).resolve().parent.parent
+
+
+def find_data_root(start: Path | None = None) -> Path | None:
+    """Nearest ancestor of `start` holding a subjects/ directory."""
+    base = (start or Path.cwd()).resolve()
+    for candidate in (base, *base.parents):
+        if (candidate / "subjects").is_dir():
+            return candidate
+    # Editable install or a checkout invoked from elsewhere.
+    if (PACKAGE_ROOT / "subjects").is_dir():
+        return PACKAGE_ROOT
+    return None
+
+
+def _resolve_dir(explicit: Path | None, name: str) -> Path:
+    if explicit is not None:
+        return explicit
+    root = find_data_root()
+    if root is None:
+        sys.exit(
+            f"no {name}/ directory found here or in any parent.\n"
+            "truecost audits the data in its repository, so run it from a clone:\n"
+            "  git clone https://github.com/gajanansr/truecost && cd truecost\n"
+            f"or point at one explicitly with --{name}-dir."
+        )
+    return root / name
 
 
 def _load_subjects(directory: Path) -> dict[str, manifest.Subject]:
@@ -193,8 +222,8 @@ def cmd_verify(args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="truecost", description=__doc__.split("\n")[0])
     parser.add_argument("--version", action="version", version=f"truecost {__version__}")
-    parser.add_argument("--subjects-dir", type=Path, default=SUBJECTS_DIR)
-    parser.add_argument("--results-dir", type=Path, default=RESULTS_DIR)
+    parser.add_argument("--subjects-dir", type=Path, default=None)
+    parser.add_argument("--results-dir", type=Path, default=None)
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("subjects", help="list tools under audit").set_defaults(func=cmd_subjects)
@@ -218,6 +247,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    args.subjects_dir = _resolve_dir(args.subjects_dir, "subjects")
+    args.results_dir = _resolve_dir(args.results_dir, "results")
     return args.func(args)
 
 

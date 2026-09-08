@@ -91,3 +91,31 @@ def test_dry_run_audit_spends_nothing_and_reports_missing_corpus():
 def test_unknown_subject_exits_with_known_list():
     with pytest.raises(SystemExit, match="unknown subject"):
         cli.main(["--subjects-dir", str(SUBJECTS), "audit", "nonesuch"])
+
+
+class TestDataRootDiscovery:
+    """`pipx install truecost` then `truecost subjects` must not look in site-packages.
+
+    The audit's data lives in the repository, not the wheel. Resolving it from
+    the package's own location finds site-packages/subjects, which never exists.
+    """
+
+    def test_finds_root_from_within_the_repo(self):
+        assert cli.find_data_root(SUBJECTS) == SUBJECTS.parent
+
+    def test_finds_root_from_a_nested_directory(self):
+        assert cli.find_data_root(SUBJECTS.parent / "truecost" / "core") == SUBJECTS.parent
+
+    def test_returns_none_outside_any_checkout(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(cli, "PACKAGE_ROOT", tmp_path / "nowhere")
+        assert cli.find_data_root(tmp_path) is None
+
+    def test_missing_root_exits_with_actionable_guidance(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(cli, "PACKAGE_ROOT", tmp_path / "nowhere")
+        monkeypatch.chdir(tmp_path)
+        with pytest.raises(SystemExit) as exc:
+            cli.main(["subjects"])
+        assert "run it from a clone" in str(exc.value)
+
+    def test_explicit_dir_wins_over_discovery(self, tmp_path):
+        assert cli._resolve_dir(tmp_path, "subjects") == tmp_path
