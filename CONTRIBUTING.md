@@ -121,6 +121,29 @@ Keep it that way.
 
 ---
 
+## Repository rules
+
+Three rulesets are enforced on this repository. Each exists for a reason
+specific to what this project publishes.
+
+**`main` history is evidence** — force pushes and branch deletion are blocked,
+with **no bypass for anyone, including the owner**. Published rows cite the
+commits that produced them. A rewritten history means a citation that no longer
+resolves, which is the same failure as deleting a result you did not like.
+
+**`main` requires green CI** — pull requests must pass `lint`, `integrity`, and
+the full six-way test matrix, and must resolve review threads. `integrity` is
+the job that runs `truecost verify`, so a change that breaks the reproducibility
+guarantee cannot merge. CODEOWNERS review is required, which routes anything
+touching `core/`, `METHODOLOGY.md`, `DISCLOSURE.md`, `subjects/`, `corpus/`, or
+`results/` to an explicit review — those are the paths that can change a
+published number.
+
+**Release tags are immutable** — `v*` tags cannot be deleted or moved. The
+release workflow publishes to PyPI on tag push via trusted publishing, so a
+moved tag would republish different code under a version someone has already
+installed.
+
 ## Commit messages
 
 Say what was measured and what it showed. `bench: a read-shunt's saving is half
