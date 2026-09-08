@@ -32,7 +32,7 @@ jobs:
       - name: metadata renders on PyPI
         # A README that fails to render is only discoverable after publishing.
         run: twine check dist/*
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
