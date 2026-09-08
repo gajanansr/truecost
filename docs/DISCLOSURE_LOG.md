@@ -14,9 +14,16 @@ and there is nobody to notify.
 | Subject | Row | Notified | Window closes | Response | Status |
 |---|---|---|---|---|---|
 | ContextMesh | RepoMap, memory | — | — | — | **self-audit, exempt** |
-| Portal shunt | read delegation | *not yet sent* | — | — | blocked on notification |
-| RTK | output compression | *not yet sent* | — | — | not yet measured |
+| Portal shunt | read delegation | *drafted, not sent* | — | — | [draft](disclosures/2026-09-09-portal-shunt.md); target + channel unconfirmed |
+| RTK | output compression | n/a | — | — | **not yet measured** — nothing to disclose |
 | Headroom | compression (INVALID) | bug reported upstream | — | *awaiting* | `INVALID`, no number published |
+
+## Nothing is sent until it can be reproduced
+
+A notification carries the raw JSON and the draft row. A subject that has not
+been measured has neither, so it cannot be notified — notifying about a
+measurement that does not exist is the opposite of what this policy is for.
+That is why RTK's row reads n/a rather than pending.
 
 ## What to send
 
