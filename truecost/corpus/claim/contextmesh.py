@@ -19,6 +19,21 @@ Verification greps for the *shape* of the answer, not merely the name. An agent
 can write a function called `retry_with_backoff` that retries immediately;
 backing off exponentially is the part memory would have supplied, so that is
 what the check requires.
+
+## Running it
+
+This corpus needs three symbols from `contextmesh` and nothing else, so install
+it without its dependency tree -- the full install pulls torch and
+sentence-transformers for features this corpus never touches:
+
+    pip install --no-deps claude-contextmesh
+
+Check before running that no contextmesh hook is registered in
+~/.claude/settings.json. `claude --settings` *adds* hooks and cannot remove one
+registered globally, so an installed hook fires alongside the benchmark's shim
+and races it -- which leaked treatment into 2 of 9 baseline runs. The preflight
+probe in the manifest checks this, and `truecost audit` refuses to start if it
+finds a problem.
 """
 
 from __future__ import annotations
