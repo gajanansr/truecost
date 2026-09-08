@@ -1,0 +1,67 @@
+name: Bug in the harness
+description: Something in truecost itself is wrong.
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Bugs that could have produced a **wrong published number** are the
+        highest priority here — billing arithmetic, delivery verification,
+        pairing, or statistics. Say so if you think that applies.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Billing / cost model (core/costs.py)
+        - Transcript parsing (core/transcript.py)
+        - Delivery verification
+        - Statistics / pairing (core/report.py)
+        - Manifest loading
+        - CLI
+        - Docs
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: severity
+    attributes:
+      label: Could this have produced a wrong published number?
+      options:
+        - label: Yes — a result in `results/` may be affected.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      render: shell
+      placeholder: |
+        truecost verify
+        pytest -m "not billed" -k test_name
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: "truecost --version, and your Python version"
+    validations:
+      required: true

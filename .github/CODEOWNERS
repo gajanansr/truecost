@@ -1,0 +1,15 @@
+# Default owner.
+*                       @gajananrathod
+
+# Anything that can change a published number needs an explicit review.
+/truecost/core/         @gajananrathod
+/docs/METHODOLOGY.md    @gajananrathod
+/docs/DISCLOSURE.md     @gajananrathod
+
+# Manifests and corpora carry shell that runs on a reviewer's machine.
+# See SECURITY.md.
+/subjects/              @gajananrathod
+/truecost/corpus/       @gajananrathod
+
+# Published data is append-only in practice; edits need scrutiny.
+/results/               @gajananrathod

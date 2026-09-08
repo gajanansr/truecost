@@ -1,0 +1,58 @@
+# Already measured. The clearest example on the board of the gap between a
+# tool's own accounting and its user's bill.
+#
+# Claimed "around a whopping 90%". Their eval file says what that measures:
+# "Claude context tokens with vs without shunt" — the delegate's tokens appear
+# nowhere in it. Rebuilt for stock Claude Code with Haiku as the delegate and
+# both sides billed:
+#
+#   parent only — the number reported     0.3127 -> 0.2324   -25.7%
+#   TOTAL, both models billed             0.3127 -> 0.2787   -10.9%
+#
+# And the one replicate of three that actually invoked the delegate saved
+# nothing: parent 0.1765 + delegate 0.1391 = 0.3156, against a 0.3127 baseline.
+# The other two took the offset/limit escape hatch and chunked the file — an
+# escape hatch the tool itself ships.
+
+[subject]
+name = "portal-shunt"
+display = "Portal shunt"
+repo = "https://github.com/spotify/backstage"
+mechanism = "delegation"
+notes = """
+Blocks the primary model from reading large files and delegates the read to a
+second model. Because it is a delegation mechanism, both models are billed by
+default — the ceiling on total spend is the price ratio between them, not 90%.
+
+A second finding, from the same run: across 6 read-task replicates the hook
+fired zero times, because both questions had a symbol to grep for. A shunt can
+only save on reads that would have happened, and for ordinary code questions
+they do not happen.
+"""
+
+[claim]
+headline = "around a whopping 90%"
+source = "https://github.com/spotify/backstage (Portal plugin eval)"
+accounting = "parent-only"
+value_pct = -90.0
+quoted = "Claude context tokens with vs without shunt."
+
+[[arm]]
+name = "shunt"
+# Delivery is proven by delegate spend, not by a transcript substring: the
+# block reason naming the script lands in the transcript whether or not the
+# agent ever runs it. That exact false pass invalidated two earlier runs.
+delivery_marker = "delegate_cost"
+notes = "PreToolUse hook blocks any Read over 350 lines. Delivery verified by the delegate's own bill being non-zero."
+
+[[arm]]
+name = "off"
+delivery_marker = "delegate_cost"
+expects_marker = false
+notes = "No hook. Expects zero delegate spend."
+
+[[pairing]]
+treatment = "shunt"
+control = "off"
+label = "Portal shunt (read delegation)"
+rationale = "Hook installed vs absent. Both models billed on the treatment side."

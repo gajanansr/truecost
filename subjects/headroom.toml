@@ -1,0 +1,52 @@
+# VOID. Published as INVALID rather than deleted.
+#
+# The prior comparison is not a measurement of Headroom and must not be read as
+# one. Its `--no-optimize` control mode still compacts tool schemas
+# (anthropic.py:2782), so both arms compressed and the delta measured nothing.
+# Reported upstream rather than published as a gotcha.
+#
+# A void result that quietly disappears is a retracted claim nobody sees, so it
+# stays on the board with its reason until a valid control exists.
+
+[subject]
+name = "headroom"
+display = "Headroom"
+repo = "https://github.com/headroom-ai/headroom"
+mechanism = "compression"
+void_reason = "prior run void: --no-optimize does not gate tool-schema compaction (anthropic.py:2782), so the control arm compressed too. Reported upstream. Awaiting a valid control before any number is published."
+notes = """
+Driven through `headroom proxy` + ANTHROPIC_BASE_URL rather than
+`headroom wrap claude`. `wrap` rewrites ~/.claude.json at user scope and
+installs Serena; the proxy form changes nothing outside the audit's own
+environment and works with OAuth auth.
+
+The pairing matters more than either arm. Comparing "through a proxy" against
+"no proxy at all" would confound compression with the cost of running a proxy,
+which is why the passthrough arm exists — and why its being broken voids the run.
+"""
+
+[claim]
+headline = "context optimization reduces token spend"
+source = "https://github.com/headroom-ai/headroom"
+accounting = "unstated"
+value_pct = -50.0
+quoted = "Claim not stated as a single reproducible figure in the project README at time of audit; -50% is a placeholder pending a figure to test, and no verdict is published against it."
+
+[[arm]]
+name = "headroom"
+requires = ["headroom"]
+env = { ANTHROPIC_BASE_URL = "http://127.0.0.1:8787" }
+notes = "Proxy with optimization enabled. Compression happens inside the proxy, so delivery is unverifiable from the transcript."
+
+[[arm]]
+name = "headroom-passthrough"
+requires = ["headroom"]
+env = { ANTHROPIC_BASE_URL = "http://127.0.0.1:8788" }
+expects_marker = false
+notes = "Same proxy, --no-optimize. KNOWN BROKEN: still compacts tool schemas, so it is not yet a valid control."
+
+[[pairing]]
+treatment = "headroom"
+control = "headroom-passthrough"
+label = "Headroom (compression)"
+rationale = "Identical network path, optimization on vs off, so the proxy's own latency and overhead cancel and only compression is measured."

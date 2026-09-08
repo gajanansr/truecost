@@ -1,0 +1,72 @@
+# The self-audit. Published first, and deliberately the harshest row on the
+# board: this project's author wrote the tool, wrote the claim, and withdrew it.
+# Every other verdict here is easier to dismiss if this one is missing.
+
+[subject]
+name = "contextmesh"
+display = "ContextMesh"
+repo = "https://github.com/gajananrathod/ContextMesh"
+mechanism = "injection"
+notes = """
+Injects recalled session memory and an AST repo map through local hooks.
+Archived by its author on the strength of the measurements below. The RepoMap
+was measured three times under different orderings and cost more every time:
++45.6% (alphabetical), +74.6% (static PageRank), +35.9% (query-personalised).
+"""
+
+[claim]
+headline = "90% fewer tokens"
+source = "https://github.com/gajananrathod/ContextMesh (README, pre-0.10.0, withdrawn)"
+accounting = "token-count"
+value_pct = -90.0
+quoted = """
+The withdrawn README claimed ~90% token reduction against an uncached baseline.
+99.5% of that headline came from a fabricated constant, since removed. Prompt
+caching alone accounts for 85.6% across 241 local sessions before any tool acts,
+so nearly all of the remainder was caching being credited to the tool.
+"""
+
+# Holds ContextMesh inert while another subject's setup runs.
+inert_env = { CONTEXTMESH_DISABLE = "1" }
+
+[preflight]
+binary = "contextmesh-hook"
+silencing_vars = ["CONTEXTMESH_NO_REPOMAP", "CONTEXTMESH_NO_MEMORY"]
+
+[[arm]]
+name = "on"
+delivery_marker = "ContextMesh"
+expects_marker = true
+notes = "Hooks live. Memory recall on, RepoMap off (its shipped default)."
+
+[[arm]]
+name = "off"
+env = { CONTEXTMESH_DISABLE = "1" }
+delivery_marker = "ContextMesh"
+expects_marker = false
+notes = "Fully inert. Expects marker ABSENT — this is how treatment leaking into the baseline gets caught, which it did, in 2 of 9 runs."
+
+[[arm]]
+name = "repomap"
+env = { CONTEXTMESH_NO_MEMORY = "1", CONTEXTMESH_REPOMAP = "1" }
+delivery_marker = "ContextMesh"
+notes = "RepoMap only. Memory held off in both directions: varying two injected blocks at once cannot say which one paid for itself, and the map is 7.7x the memory block."
+
+[[arm]]
+name = "norepomap"
+env = { CONTEXTMESH_NO_MEMORY = "1", CONTEXTMESH_NO_REPOMAP = "1" }
+delivery_marker = "ContextMesh"
+expects_marker = false
+notes = "Control for the repomap arm. Memory off on both sides."
+
+[[pairing]]
+treatment = "on"
+control = "off"
+label = "ContextMesh (memory)"
+rationale = "Hooks live vs inert. Isolates recall."
+
+[[pairing]]
+treatment = "repomap"
+control = "norepomap"
+label = "ContextMesh (RepoMap)"
+rationale = "Memory held off on both sides, so the delta is the map alone."

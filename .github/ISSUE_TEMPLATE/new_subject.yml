@@ -1,0 +1,80 @@
+name: Propose a tool to audit
+description: Suggest a tool that publishes a token-savings claim.
+title: "subject: "
+labels: ["new-subject"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Proposing a subject is not an accusation. Most overstated claims come
+        from measuring the wrong thing, which is easy — this project exists
+        because it is easy, and its author's own tool is the first row on the
+        board.
+
+        **If this is your own tool, say so.** Self-proposals are welcome and get
+        priority, because you can tell us which control is the right one.
+
+  - type: input
+    id: tool
+    attributes:
+      label: Tool
+      placeholder: "e.g. rtk-ai/rtk"
+    validations:
+      required: true
+
+  - type: input
+    id: claim_source
+    attributes:
+      label: Where the claim is published
+      placeholder: "URL to the README, blog post, or benchmark"
+    validations:
+      required: true
+
+  - type: textarea
+    id: claim
+    attributes:
+      label: The claim, quoted verbatim
+      description: Quote it. Do not paraphrase — the wording is what gets tested.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: accounting
+    attributes:
+      label: What does that number count?
+      description: |
+        Often the entire finding. `parent-only` vs `total` is the difference
+        between Portal's −90% and the −10.9% that appeared once the delegate
+        was billed.
+      options:
+        - "total — all models billed"
+        - "parent-only — primary model only, delegated work uncounted"
+        - "token-count — raw count, cache classes not priced"
+        - "unstated — the source does not say"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mechanism
+    attributes:
+      label: Mechanism
+      options: [injection, compression, delegation, retrieval, other]
+    validations:
+      required: true
+
+  - type: textarea
+    id: control
+    attributes:
+      label: What control would isolate its mechanism?
+      description: |
+        e.g. "same proxy in passthrough mode, so proxy overhead cancels".
+        If the tool has no inert mode, say so.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: affiliation
+    attributes:
+      label: Affiliation
+      options:
+        - label: I maintain or contribute to this tool.

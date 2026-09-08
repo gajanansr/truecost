@@ -1,0 +1,44 @@
+# The largest subject on the board. Compresses shell command output before the
+# agent reads it, via a PreToolUse hook that rewrites Bash calls.
+#
+# The mechanism points the right way — output that never enters the prefix is
+# not billed at a multiple for the rest of the session. What the audit tests is
+# whether the published range survives being priced by cache class rather than
+# counted, and whether the compressed commands are ones agents actually run.
+
+[subject]
+name = "rtk"
+display = "RTK"
+repo = "https://github.com/rtk-ai/rtk"
+mechanism = "compression"
+notes = """
+Single Rust binary, 100+ supported commands, <10ms overhead. Its own figure for
+a 30-minute Claude Code session is ~150K tokens down to ~45K. That is a token
+count, not a bill: the four cache classes price at 0.1x, 1.0x, 1.25x and 2.0x,
+so a 70% reduction in count and a 70% reduction in cost are different claims.
+"""
+
+[claim]
+headline = "60-90% fewer tokens on common dev commands"
+source = "https://github.com/rtk-ai/rtk"
+accounting = "token-count"
+range_pct = [-90.0, -60.0]
+quoted = "CLI proxy that reduces LLM token consumption by 60-90% on common dev commands."
+
+[[arm]]
+name = "rtk"
+requires = ["rtk"]
+# RTK's hook is wired through a generated --settings file so nothing is
+# installed globally and the user's own configuration is never mutated.
+notes = "Compression happens inside a hook that rewrites Bash calls. Not necessarily visible in the transcript, so this arm is UNVERIFIED and its number is weaker evidence than a verified one."
+
+[[arm]]
+name = "off"
+expects_marker = false
+notes = "No hook at all. RTK's own baseline: without it there is no interception to disable."
+
+[[pairing]]
+treatment = "rtk"
+control = "off"
+label = "RTK (output compression)"
+rationale = "RTK's hook rewrites Bash calls; with no hook installed there is nothing to pass through, so 'off' is the only available control."

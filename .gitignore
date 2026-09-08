@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.DS_Store
+
+# Working directories for audit runs. Raw results are committed to results/;
+# the fixtures and transcripts they were derived from are not.
+.audit-work/
+*.local.json

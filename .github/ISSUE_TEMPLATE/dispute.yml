@@ -1,0 +1,75 @@
+name: Dispute a published row
+description: You maintain an audited tool, or you think a published number is wrong.
+title: "dispute: "
+labels: ["dispute", "priority"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Maintainers of audited tools: you are the most valuable contributor here.**
+
+        A wrong control is the single most likely way this project publishes
+        something false. It has already happened once — the Headroom run was
+        void because its `--no-optimize` control still compacted tool schemas,
+        so both arms compressed.
+
+        **A row that cannot be defended is withdrawn**, not softened, and the
+        withdrawal is recorded in `CHANGELOG.md`.
+
+        "The result is unflattering" is not grounds. "The result measures
+        something other than what you said it measures" always is.
+
+  - type: input
+    id: row
+    attributes:
+      label: Which row
+      placeholder: "e.g. RTK (output compression), claim axis"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: grounds
+    attributes:
+      label: Grounds
+      options:
+        - The control does not isolate what you said it isolates
+        - The claim was misquoted, or `accounting` is recorded wrongly
+        - The corpus does not exercise the mechanism the tool is for
+        - The tool was misconfigured, or a required component was absent
+        - Delivery was assumed rather than verified
+        - The arithmetic or statistics are wrong
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: detail
+    attributes:
+      label: What is wrong
+      description: Be specific. Point at the manifest, corpus, or results file.
+    validations:
+      required: true
+
+  - type: textarea
+    id: correct
+    attributes:
+      label: What the correct setup would be
+      description: |
+        If the control is wrong, what control would isolate your tool's
+        mechanism? This is the most useful thing you can write here.
+    validations:
+      required: true
+
+  - type: input
+    id: affiliation
+    attributes:
+      label: Your relationship to the tool
+      placeholder: "maintainer / contributor / user / none"
+
+  - type: checkboxes
+    id: ack
+    attributes:
+      label: Acknowledgement
+      options:
+        - label: I understand a remeasurement may produce the same result, and that it will be published either way.
+          required: true

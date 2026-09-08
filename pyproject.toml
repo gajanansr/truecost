@@ -1,0 +1,59 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "truecost"
+version = "0.1.0"
+description = "A cache-aware audit of LLM token-savings claims"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Gajanan Rathod" }]
+keywords = ["llm", "benchmark", "prompt-caching", "claude-code", "tokens", "audit"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Testing",
+]
+
+# No runtime dependencies. The billing model is arithmetic and the statistics
+# are a t-table; pulling in numpy or scipy to compute a paired mean would make
+# the harness harder to audit than the tools it audits.
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3.0", "ruff>=0.7.0", "mypy>=1.13.0"]
+
+[project.urls]
+Homepage = "https://github.com/gajananrathod/truecost"
+Issues = "https://github.com/gajananrathod/truecost/issues"
+Methodology = "https://github.com/gajananrathod/truecost/blob/main/docs/METHODOLOGY.md"
+
+[project.scripts]
+truecost = "truecost.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["truecost"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+    "billed: spends real API tokens on live sessions; never runs in CI",
+]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
