@@ -122,9 +122,14 @@ def cmd_audit(args: argparse.Namespace) -> int:
 
     def progress(result) -> None:
         state = "ok" if result.verified else ("ERROR" if result.cli_error else "unverified")
+        # flush: an audit runs for an hour or more, and stdout is block-buffered
+        # whenever it is not a terminal. Without this, `truecost audit > log`
+        # shows nothing at all until the run ends -- so a run failing on its
+        # first session looks identical to one working perfectly.
         print(
             f"  {result.task_id:<12} {result.arm:<20} r{result.replicate}  "
-            f"{result.turns:>3} turns  ${result.cost_usd:.4f}  {state}"
+            f"{result.turns:>3} turns  ${result.cost_usd:.4f}  {state}",
+            flush=True,
         )
 
     try:
