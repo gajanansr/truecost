@@ -129,3 +129,16 @@ class TestDataRootDiscovery:
 
     def test_explicit_dir_wins_over_discovery(self, tmp_path):
         assert cli._resolve_dir(tmp_path, "subjects") == tmp_path
+
+
+def test_in_flight_partials_are_not_read_as_results(tmp_path):
+    """pathlib's glob matches dotfiles; a partial has the same shape as a result."""
+    (tmp_path / ".fake__claim.partial.json").write_text(
+        '[{"arm":"on","task_id":"t","replicate":1,"cost_usd":1.0,"turns":2,"verified":true}]'
+    )
+    (tmp_path / "real__claim__2026-01-01.json").write_text(
+        '[{"arm":"on","task_id":"t","replicate":1,"cost_usd":1.0,"turns":2,"verified":true},'
+        ' {"arm":"off","task_id":"t","replicate":1,"cost_usd":2.0,"turns":3,"verified":true}]'
+    )
+    loaded = [p.name for p, _ in cli._load_results(tmp_path)]
+    assert loaded == ["real__claim__2026-01-01.json"]

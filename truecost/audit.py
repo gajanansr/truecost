@@ -138,6 +138,15 @@ def results_filename(subject: str, axis: str, on: date | None = None) -> str:
     return f"{subject}__{axis}__{(on or date.today()).isoformat()}.json"
 
 
+def partial_filename(subject: str, axis: str) -> str:
+    """Where results land while a run is still in flight.
+
+    Not date-stamped: a partial is a live scratch file, and a resumed run should
+    find the one left by the run it is continuing rather than start a new one.
+    """
+    return f".{subject}__{axis}.partial.json"
+
+
 def save(matrix: Matrix, delivery: dict, path: Path) -> Path:
     """Write run rows, each carrying whether its treatment was delivered.
 
@@ -201,16 +210,40 @@ def run(
     settings = settings or write_settings(subject, workdir)
     built = builder.build(workdir, settings or workdir / "settings.json")
 
+    # Persist each run as it lands. A long audit is expensive and interruptible
+    # -- the first real one was killed by memory pressure at 45 of 52 sessions,
+    # and because results were only written at the end, every billed session was
+    # lost. Writing the whole list each time is cheap at this scale and cannot
+    # leave a half-written row behind.
+    import json as _json
+
+    results_dir.mkdir(parents=True, exist_ok=True)
+    partial = results_dir / partial_filename(subject.name, axis)
+    live: list[dict] = []
+    delivery: dict[tuple[str, str, int], bool | None] = {}
+
+    def record(result) -> None:
+        marker = subject.arms[result.arm].delivery_marker
+        key = (result.task_id, result.arm, result.replicate)
+        delivery[key] = _delivered(result, marker)
+        row = result.row()
+        row["delivered"] = delivery[key]
+        live.append(row)
+        partial.write_text(_json.dumps(live, indent=2) + "\n")
+        if on_result is not None:
+            on_result(result)
+
     matrix = run_matrix(
-        built.tasks, replicates=replicates, arms=runnable, model=model, on_result=on_result
+        built.tasks, replicates=replicates, arms=runnable, model=model, on_result=record
     )
 
-    delivery: dict[tuple[str, str, int], bool | None] = {}
     for result in matrix.results:
-        marker = subject.arms[result.arm].delivery_marker
-        delivery[(result.task_id, result.arm, result.replicate)] = _delivered(result, marker)
+        key = (result.task_id, result.arm, result.replicate)
+        if key not in delivery:
+            delivery[key] = _delivered(result, subject.arms[result.arm].delivery_marker)
 
     path = save(matrix, delivery, results_dir / results_filename(subject.name, axis))
+    partial.unlink(missing_ok=True)
     return AuditResult(
         subject=subject,
         axis=axis,

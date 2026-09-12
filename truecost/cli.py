@@ -153,8 +153,17 @@ def cmd_audit(args: argparse.Namespace) -> int:
 
 
 def _load_results(directory: Path) -> list[tuple[Path, dict]]:
+    """Published results only.
+
+    pathlib's glob matches dotfiles, unlike a shell glob, so an in-flight
+    `.<subject>__<axis>.partial.json` would otherwise be read back as a finished
+    measurement -- and `verify` would accept it, since a partial has the same
+    shape as a complete one.
+    """
     out = []
     for path in sorted(directory.glob("*.json")):
+        if path.name.startswith("."):
+            continue
         try:
             out.append((path, json.loads(path.read_text())))
         except json.JSONDecodeError as exc:

@@ -218,3 +218,38 @@ class TestHookSettings:
         """A proxy-based tool needs no hook, and must not get an empty one."""
         _run(_subject(), tmp_path)
         assert not (tmp_path / "work" / "settings.json").exists()
+
+
+class TestPartialSaves:
+    """A long, billed run must not lose everything when it dies.
+
+    The first real self-audit was killed by memory pressure at 45 of 52
+    sessions. save() only ran at the end, so every one of those billed sessions
+    produced nothing. Results are now persisted as they arrive.
+    """
+
+    def test_partial_file_survives_a_run_that_dies_midway(self, registered, delivered, tmp_path):
+        results_dir = tmp_path / "results"
+
+        def dying_runner(tasks, replicates=3, arms=None, model=None, on_result=None):
+            for result in _matrix().results[:2]:
+                on_result(result)
+            raise KeyboardInterrupt("killed, as the real run was")
+
+        with pytest.raises(KeyboardInterrupt):
+            audit.run(
+                _subject(),
+                "claim",
+                workdir=tmp_path / "work",
+                results_dir=results_dir,
+                run_matrix=dying_runner,
+            )
+        partial = results_dir / audit.partial_filename("fake", "claim")
+        assert partial.exists(), "billed runs were lost"
+        assert len(json.loads(partial.read_text())) == 2
+
+    def test_partial_is_removed_once_the_run_finishes(self, registered, delivered, tmp_path):
+        out = _run(_subject(), tmp_path)
+        partial = tmp_path / "results" / audit.partial_filename("fake", "claim")
+        assert out.results_path.exists()
+        assert not partial.exists()

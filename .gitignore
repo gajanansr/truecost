@@ -14,3 +14,6 @@ build/
 # the fixtures and transcripts they were derived from are not.
 .audit-work/
 *.local.json
+
+# In-flight audit results. The finished file is committed; the partial is not.
+.*.partial.json
