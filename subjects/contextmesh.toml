@@ -29,6 +29,12 @@ so nearly all of the remainder was caching being credited to the tool.
 # Holds ContextMesh inert while another subject's setup runs.
 inert_env = { CONTEXTMESH_DISABLE = "1" }
 
+# Delivered through `claude --settings`, which adds hooks for one invocation
+# without touching ~/.claude/settings.json. `contextmesh-hook` must be on PATH.
+[hook]
+command = "contextmesh-hook"
+events = ["UserPromptSubmit", "SessionEnd"]
+
 [preflight]
 binary = "contextmesh-hook"
 silencing_vars = ["CONTEXTMESH_NO_REPOMAP", "CONTEXTMESH_NO_MEMORY"]

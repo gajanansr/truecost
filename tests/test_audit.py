@@ -14,7 +14,7 @@ import pytest
 
 from truecost import audit, corpus, verdict
 from truecost.core.runner import Matrix, Task
-from truecost.manifest import Arm, Claim, Pairing, Subject
+from truecost.manifest import Arm, Claim, Hook, Pairing, Subject
 
 
 def _subject(**over) -> Subject:
@@ -189,3 +189,32 @@ class TestHonesty:
         out = _run(_subject(), tmp_path, matrix=one)
         assert not audit.comparison_is_publishable(out.rows[0].comparison)
         assert out.rows[0].interval == ""
+
+
+class TestHookSettings:
+    """A hook-based subject delivers its treatment through `claude --settings`.
+
+    The audit passed that path to the CLI and never created the file. Every one
+    of 52 runs died with "Settings file not found" -- 0 turns, $0.00, and the
+    verdict correctly read INVALID rather than a confident null.
+    """
+
+    def test_settings_file_is_written_for_a_hook_subject(self, registered, delivered, tmp_path):
+        subject = _subject(hook=Hook(command="my-hook", events=("UserPromptSubmit",)))
+        out = _run(subject, tmp_path)
+        settings = tmp_path / "work" / "settings.json"
+        assert settings.exists(), "claude --settings was pointed at a file nothing wrote"
+        body = json.loads(settings.read_text())
+        assert body["hooks"]["UserPromptSubmit"][0]["hooks"][0]["command"] == "my-hook"
+        assert out.rows
+
+    def test_every_declared_event_is_registered(self, registered, delivered, tmp_path):
+        subject = _subject(hook=Hook(command="my-hook", events=("UserPromptSubmit", "SessionEnd")))
+        _run(subject, tmp_path)
+        body = json.loads((tmp_path / "work" / "settings.json").read_text())
+        assert set(body["hooks"]) == {"UserPromptSubmit", "SessionEnd"}
+
+    def test_subject_without_a_hook_writes_no_settings(self, registered, delivered, tmp_path):
+        """A proxy-based tool needs no hook, and must not get an empty one."""
+        _run(_subject(), tmp_path)
+        assert not (tmp_path / "work" / "settings.json").exists()

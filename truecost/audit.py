@@ -116,6 +116,24 @@ def _rows_for(
     return rows
 
 
+def write_settings(subject: Subject, workdir: Path) -> Path | None:
+    """Generate the `claude --settings` file for a hook-based subject.
+
+    The audit used to pass this path to the CLI without creating it. Every run
+    then died with "Settings file not found" -- 0 turns, $0.00 spent, and the
+    verdict read INVALID because the treatment provably never reached the model.
+    The delivery check caught it; nothing else would have.
+    """
+    if subject.hook is None:
+        return None
+    import json
+
+    workdir.mkdir(parents=True, exist_ok=True)
+    path = workdir / "settings.json"
+    path.write_text(json.dumps(subject.hook.settings(), indent=2) + "\n")
+    return path
+
+
 def results_filename(subject: str, axis: str, on: date | None = None) -> str:
     return f"{subject}__{axis}__{(on or date.today()).isoformat()}.json"
 
@@ -180,6 +198,7 @@ def run(
 
     builder = corpus_mod.get(subject.name, axis)
     assert builder is not None  # availability was checked above
+    settings = settings or write_settings(subject, workdir)
     built = builder.build(workdir, settings or workdir / "settings.json")
 
     matrix = run_matrix(

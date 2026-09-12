@@ -77,6 +77,31 @@ class Claim:
 
 
 @dataclass(frozen=True)
+class Hook:
+    """How a subject's treatment reaches the model.
+
+    A hook-based tool is delivered through `claude --settings`, which *adds*
+    hooks for one invocation without touching the user's global configuration.
+    The audit generates that settings file; declaring the command here rather
+    than hardcoding it keeps the core free of any particular tool's name.
+
+    `command` must be on PATH. Omit the whole section for a subject that needs
+    no hook -- a proxy-based tool must not be handed an empty one.
+    """
+
+    command: str
+    events: tuple[str, ...] = ("UserPromptSubmit",)
+
+    def settings(self) -> dict:
+        return {
+            "hooks": {
+                event: [{"matcher": "*", "hooks": [{"type": "command", "command": self.command}]}]
+                for event in self.events
+            }
+        }
+
+
+@dataclass(frozen=True)
 class Pairing:
     """One comparison: a treatment against the control that isolates it."""
 
@@ -101,6 +126,8 @@ class Subject:
     # verify commands never trip it.
     inert_env: dict[str, str] = field(default_factory=dict)
     preflight: PreflightProbe | None = None
+    # How the treatment is delivered, when it is delivered by a hook.
+    hook: Hook | None = None
     # Set when a prior published run was withdrawn, with the reason. Printed on
     # every report: a void result that quietly disappears is a retracted claim.
     void_reason: str = ""
@@ -169,6 +196,16 @@ def load(path: Path) -> Subject:
             if side not in arms:
                 raise ValueError(f"{path.name}: pairing {p.label!r} names unknown arm {side!r}")
 
+    hook_raw = raw.get("hook")
+    hook = (
+        Hook(
+            command=hook_raw["command"],
+            events=tuple(hook_raw.get("events", ("UserPromptSubmit",))),
+        )
+        if hook_raw
+        else None
+    )
+
     pre = raw.get("preflight")
     probe = (
         PreflightProbe(
@@ -190,6 +227,7 @@ def load(path: Path) -> Subject:
         pairings=pairings,
         inert_env=raw.get("inert_env", {}),
         preflight=probe,
+        hook=hook,
         void_reason=meta.get("void_reason", ""),
         notes=meta.get("notes", ""),
     )
