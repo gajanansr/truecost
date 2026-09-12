@@ -23,6 +23,36 @@ The audit's data — the subject manifests and every published result — lives 
 this repository, not in the wheel. The CLI discovers it by walking up from your
 working directory, so run it from a clone (or pass `--subjects-dir`).
 
+## What it looks like
+
+`--dry-run` prints the plan and spends nothing. The `measures:` line is the
+thesis in one row — what a published number actually counted:
+
+```console
+$ truecost audit portal-shunt --dry-run
+auditing Portal shunt on the claim corpus
+  claim:      -90.0% (around a whopping 90%)
+  measures:   primary model only; delegated work not counted
+  arms:       off, shunt
+  pairing:    shunt vs off — Portal shunt (read delegation)
+              Hook installed vs absent. Both models billed on the treatment side.
+  replicates: 3
+  corpus:     no claim corpus registered for 'portal-shunt'
+
+--dry-run: nothing executed. Remove it to spend real tokens.
+```
+
+`verify` is the gate CI runs on every push — it refuses a control arm that
+expects its own delivery marker, and a claim whose accounting is unstated with
+no supporting quote:
+
+```console
+$ truecost verify
+OK: 4 subject(s), 10 result file(s)
+```
+
+---
+
 ---
 
 ## Why claimed savings and real savings differ
