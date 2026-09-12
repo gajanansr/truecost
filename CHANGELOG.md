@@ -35,6 +35,16 @@ published.
 - `truecost report` renders rows from saved audits. Inherited pre-CLI results
   are republished as raw data and explicitly not re-rendered as verdicts.
 
+### Corrected
+- **A published figure was wrong.** The amplification table claimed +16,870 extra
+  billed tokens for the RepoMap injection. No committed result file reproduces
+  it — the personalised run gives +15,678 and the alphabetical run +17,473. The
+  figure was inherited from ContextMesh's README and could not be regenerated
+  from the data shipped beside it. The table now carries only figures that
+  `scripts/amplification.py` reproduces from `results/`, and names the file
+  behind each one. The conclusion is unchanged; one number was not checkable and
+  is now.
+
 ### Fixed
 - `pipx install truecost && truecost subjects` looked for `site-packages/subjects`
   and failed. The audit's data lives in the repository, not the wheel, so the

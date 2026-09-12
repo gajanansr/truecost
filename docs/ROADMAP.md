@@ -25,10 +25,8 @@ author's tool.
 
 ## Phase 2 — the leaderboard
 
-Each subject lands independently, under [`DISCLOSURE.md`](DISCLOSURE.md).
-Notification dates and windows are tracked in
-[`DISCLOSURE_LOG.md`](DISCLOSURE_LOG.md); the repository stays private until
-every third-party window has closed.
+Each subject lands independently. Every row ships its raw data so anyone can
+reproduce it; disputes are handled in [`DISPUTES.md`](DISPUTES.md).
 
 - [ ] `neutral/` corpus on pinned real repositories
 - [ ] RTK — manifest written; largest subject on the board

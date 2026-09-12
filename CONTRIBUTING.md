@@ -135,7 +135,7 @@ resolves, which is the same failure as deleting a result you did not like.
 the full six-way test matrix, and must resolve review threads. `integrity` is
 the job that runs `truecost verify`, so a change that breaks the reproducibility
 guarantee cannot merge. CODEOWNERS review is required, which routes anything
-touching `core/`, `METHODOLOGY.md`, `DISCLOSURE.md`, `subjects/`, `corpus/`, or
+touching `core/`, `METHODOLOGY.md`, `DISPUTES.md`, `subjects/`, `corpus/`, or
 `results/` to an explicit review — those are the paths that can change a
 published number.
 

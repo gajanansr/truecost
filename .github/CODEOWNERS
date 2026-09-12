@@ -4,7 +4,7 @@
 # Anything that can change a published number needs an explicit review.
 /truecost/core/         @gajanansr
 /docs/METHODOLOGY.md    @gajanansr
-/docs/DISCLOSURE.md     @gajanansr
+/docs/DISPUTES.md       @gajanansr
 
 # Manifests and corpora carry shell that runs on a reviewer's machine.
 # See SECURITY.md.

@@ -60,6 +60,11 @@ jobs:
       - run: pip install -e .
       - name: every subject and result is well-formed
         run: truecost verify
+      - name: README's amplification figures still regenerate
+        # The table in README.md is computed from results/, not quoted. If this
+        # breaks, a published number no longer matches its data.
+        run: python scripts/amplification.py
+
       - name: every result file is valid JSON
         run: |
           for f in results/*.json; do

@@ -120,6 +120,6 @@ truecost audit yourtool --dry-run     # inspect the plan, spend nothing
 
 ## 4. Before it is published
 
-Adding a manifest does not publish a verdict. Measuring does, and measuring
-triggers [`DISCLOSURE.md`](DISCLOSURE.md): the maintainer is notified with the
-full result and has 14 days to respond before the row goes up.
+Adding a manifest does not publish a verdict. Measuring does — and a published
+row must ship its raw JSON so anyone can reproduce or refute it. See
+[`DISPUTES.md`](DISPUTES.md).
