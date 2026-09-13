@@ -41,27 +41,27 @@ silencing_vars = ["CONTEXTMESH_NO_REPOMAP", "CONTEXTMESH_NO_MEMORY"]
 
 [[arm]]
 name = "on"
-delivery_marker = "ContextMesh"
+delivery_marker = "ContextMesh memory"
 expects_marker = true
-notes = "Hooks live. Memory recall on, RepoMap off (its shipped default)."
+notes = "Hooks live. Memory recall on, RepoMap off (its shipped default). The marker is the injected block's own header, not the project name: \"ContextMesh\" alone matched a Claude Code auto-memory note in all 15 runs of an earlier attempt, including every control."
 
 [[arm]]
 name = "off"
 env = { CONTEXTMESH_DISABLE = "1" }
-delivery_marker = "ContextMesh"
+delivery_marker = "ContextMesh memory"
 expects_marker = false
 notes = "Fully inert. Expects marker ABSENT — this is how treatment leaking into the baseline gets caught, which it did, in 2 of 9 runs."
 
 [[arm]]
 name = "repomap"
 env = { CONTEXTMESH_NO_MEMORY = "1", CONTEXTMESH_REPOMAP = "1" }
-delivery_marker = "ContextMesh"
+delivery_marker = "ContextMesh RepoMap"
 notes = "RepoMap only. Memory held off in both directions: varying two injected blocks at once cannot say which one paid for itself, and the map is 7.7x the memory block."
 
 [[arm]]
 name = "norepomap"
 env = { CONTEXTMESH_NO_MEMORY = "1", CONTEXTMESH_NO_REPOMAP = "1" }
-delivery_marker = "ContextMesh"
+delivery_marker = "ContextMesh RepoMap"
 expects_marker = false
 notes = "Control for the repomap arm. Memory off on both sides."
 

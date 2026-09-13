@@ -56,7 +56,39 @@ lands in the transcript whether or not the agent ever ran it — that false pass
 invalidated two runs. Portal's shunt is verified by the delegate's bill being
 non-zero, which cannot be faked by an agent that routed around it.
 
-## 4. Bill every model
+## 4. Silence the host's own features
+
+The client running the benchmark has features of its own, and they compete with
+the tool under test.
+
+Measured here: in an attempt at the ContextMesh self-audit, **15 of 15 sessions
+carried a Claude Code `AutoMem` attachment — in every arm, including the
+controls.** The "no memory" baseline was not memory-free. The comparison was
+between two memory systems, not between one and nothing, and every number it
+produced would have been wrong in a direction nobody could see.
+
+`truecost` therefore writes `autoMemoryEnabled: false` into every generated
+settings file. Any host feature that overlaps a subject's mechanism has to be
+disabled the same way, and a subject whose mechanism the host also implements
+cannot be cleanly measured until it is.
+
+**Corollary: pick a delivery marker that only the treatment can produce.** The
+same run reported delivery on all 15 sessions because the marker was the project
+name, `ContextMesh`, and the host's auto-memory note happened to mention it. The
+marker is now the injected block's own header. A marker that something other
+than the treatment can write is not a delivery check.
+
+## 5. Measure whether the hook ran, do not assume it
+
+"The hook ran and produced nothing" and "the hook never ran" call for opposite
+conclusions, and from cost and turn counts alone they are identical.
+
+Every hook-based subject is therefore wrapped in a shim that appends one line
+per invocation — event, exit code, bytes emitted — to `hook.log` in the audit's
+working directory. When a row reads "no effect", that log says whether the tool
+was given a chance to have one.
+
+## 6. Bill every model
 
 A tool that delegates work to a second model has not saved anything until the
 second model's bill is counted. Delegation subjects are billed on both sides by
@@ -65,7 +97,7 @@ default, and the report prints the tool's own accounting beside the total.
 The ceiling on total spend for a delegation mechanism is the price ratio between
 the two models — not the reduction in the primary model's context.
 
-## 5. Pair against the control that isolates the mechanism
+## 7. Pair against the control that isolates the mechanism
 
 Not a shared baseline. Getting this wrong produces a number that is confidently
 wrong.
@@ -79,7 +111,7 @@ wrong.
 Comparing a proxy tool against "no proxy at all" confounds compression with the
 cost of running a proxy.
 
-## 6. Control for cache ordering
+## 8. Control for cache ordering
 
 Cold-versus-warm cache ordering was measured at **8× on a trivial task** —
 larger than any effect anyone is looking for. Therefore:
@@ -89,7 +121,7 @@ larger than any effect anyone is looking for. Therefore:
 
 An A/B that runs A first every time measures the ordering.
 
-## 7. Statistics
+## 9. Statistics
 
 - Replicates paired by task; the unit of analysis is the within-task delta.
 - 95% intervals from a t-distribution.
@@ -101,14 +133,14 @@ An A/B that runs A first every time measures the ordering.
 
 A single run can never produce a headline.
 
-## 8. Every corpus carries a control task
+## 10. Every corpus carries a control task
 
 A task on which the mechanism cannot fire. Controls are the only defence against
 a corpus written to produce a conclusion. They have twice returned a 0.00 turn
 change, which is what a rigged corpus cannot do. `Corpus.__post_init__` refuses
 to build without one.
 
-## 9. Publish the raw data
+## 11. Publish the raw data
 
 Every row ships the JSON it came from. CI enforces it. A row without data is an
 assertion.

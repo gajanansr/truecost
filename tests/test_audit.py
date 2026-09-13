@@ -205,8 +205,26 @@ class TestHookSettings:
         settings = tmp_path / "work" / "settings.json"
         assert settings.exists(), "claude --settings was pointed at a file nothing wrote"
         body = json.loads(settings.read_text())
-        assert body["hooks"]["UserPromptSubmit"][0]["hooks"][0]["command"] == "my-hook"
+        # The hook is wrapped in a shim so invocations and output size are
+        # recorded: "ran and emitted nothing" and "never ran" call for opposite
+        # conclusions and are otherwise indistinguishable.
+        registered = body["hooks"]["UserPromptSubmit"][0]["hooks"][0]["command"]
+        assert registered.endswith("hook-shim.sh")
+        shim = tmp_path / "work" / "hook-shim.sh"
+        assert shim.exists() and shim.stat().st_mode & 0o111
+        assert "my-hook" in shim.read_text()
         assert out.rows
+
+    def test_host_auto_memory_is_disabled(self, registered, delivered, tmp_path):
+        """The host's own recall competes with the tool under test.
+
+        Measured: 15 of 15 sessions in an earlier attempt carried a Claude Code
+        AutoMem attachment in every arm, so the control was not memory-free.
+        """
+        subject = _subject(hook=Hook(command="my-hook", events=("UserPromptSubmit",)))
+        _run(subject, tmp_path)
+        body = json.loads((tmp_path / "work" / "settings.json").read_text())
+        assert body["autoMemoryEnabled"] is False
 
     def test_every_declared_event_is_registered(self, registered, delivered, tmp_path):
         subject = _subject(hook=Hook(command="my-hook", events=("UserPromptSubmit", "SessionEnd")))

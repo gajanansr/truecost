@@ -129,8 +129,28 @@ def write_settings(subject: Subject, workdir: Path) -> Path | None:
     import json
 
     workdir.mkdir(parents=True, exist_ok=True)
+
+    # The hook is wrapped in a shim that records every invocation and how many
+    # bytes the hook emitted. Without it, "the hook ran and produced nothing"
+    # and "the hook never ran" are indistinguishable -- and they call for
+    # opposite conclusions. The original harness learned this the hard way.
+    shim = workdir / "hook-shim.sh"
+    shim.write_text(
+        "#!/bin/bash\n"
+        f"LOG={workdir}/hook.log\n"
+        "PAYLOAD=$(cat)\n"
+        f'OUT=$(printf "%s" "$PAYLOAD" | {subject.hook.command})\n'
+        "RC=$?\n"
+        # Claude Code emits compact JSON; a hand-run probe may not. Tolerate both.
+        'EVT=$(printf "%s" "$PAYLOAD" | sed -n \'s/.*"hook_event_name"'
+        '[[:space:]]*:[[:space:]]*"\\([^"]*\\)".*/\\1/p\')\n'
+        'printf "%s rc=%s bytes=%s\\n" "$EVT" "$RC" "${#OUT}" >> "$LOG"\n'
+        'printf "%s" "$OUT"\n'
+    )
+    shim.chmod(0o755)
+
     path = workdir / "settings.json"
-    path.write_text(json.dumps(subject.hook.settings(), indent=2) + "\n")
+    path.write_text(json.dumps(subject.hook.settings(str(shim)), indent=2) + "\n")
     return path
 
 

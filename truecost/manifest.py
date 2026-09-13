@@ -92,12 +92,19 @@ class Hook:
     command: str
     events: tuple[str, ...] = ("UserPromptSubmit",)
 
-    def settings(self) -> dict:
+    def settings(self, command: str | None = None) -> dict:
+        cmd = command or self.command
         return {
             "hooks": {
-                event: [{"matcher": "*", "hooks": [{"type": "command", "command": self.command}]}]
+                event: [{"matcher": "*", "hooks": [{"type": "command", "command": cmd}]}]
                 for event in self.events
-            }
+            },
+            # The host's own recall competes with the tool under test. Measured:
+            # 15 of 15 sessions in an earlier attempt carried a Claude Code
+            # AutoMem attachment, in every arm — so the "no memory" control was
+            # not memory-free, and the comparison was between two memory
+            # systems rather than one.
+            "autoMemoryEnabled": False,
         }
 
 
